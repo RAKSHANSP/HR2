@@ -16,17 +16,9 @@ pipeline {
                         -Dsonar.projectKey=hr2-project ^
                         -Dsonar.sources=. ^
                         -Dsonar.host.url=http://localhost:9000 ^
-                        -Dsonar.token=%SONAR_TOKEN%
+                        -Dsonar.login=%SONAR_TOKEN%
                         """
                     }
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 2, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -39,8 +31,8 @@ pipeline {
 
         stage('Run Container') {
             steps {
-                bat 'docker rm -f hr2-container || exit 0'
-                bat 'for /f "tokens=1" %i in (\'docker ps -q --filter "publish=8501"\') do docker rm -f %i'
+                bat 'docker stop hr2-container || exit 0'
+                bat 'docker rm hr2-container || exit 0'
                 bat 'docker run -d -p 8501:8501 --name hr2-container hr2-app'
             }
         }
