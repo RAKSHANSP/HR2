@@ -6,7 +6,7 @@ import joblib
 
 @st.cache_resource
 def load_model():
-    model = joblib.load("./output/best_rf.pkl")  # change to your file path if needed
+    model = joblib.load("app/output/best_rf.pkl") # change to your file path if needed
     return model
 
 model = load_model()
