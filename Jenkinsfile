@@ -3,12 +3,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/RAKSHANSP/HR2.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 bat 'docker build -t hr2-app -f docker/Dockerfile .'
