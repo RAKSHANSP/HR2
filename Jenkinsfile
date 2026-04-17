@@ -23,6 +23,15 @@ pipeline {
             }
         }
 
+        // 🔥 ADDED: QUALITY GATE CHECK (IMPORTANT)
+        stage('Quality Gate Check') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 bat 'docker build -t hr2-app -f docker/Dockerfile .'
