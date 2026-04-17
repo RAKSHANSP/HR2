@@ -1,0 +1,15 @@
+- name: Deploy HR App using Ansible
+  hosts: local
+  tasks:
+
+    - name: Build Docker image
+      shell: docker build -t hr2-app:latest -f ../docker/Dockerfile ..
+
+    - name: Stop container
+      shell: docker stop hr2-container || true
+
+    - name: Remove container
+      shell: docker rm hr2-container || true
+
+    - name: Run container
+      shell: docker run -d -p 8501:8501 --name hr2-container hr2-app:latest

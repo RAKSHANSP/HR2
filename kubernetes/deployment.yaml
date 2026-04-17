@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr2-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hr2-app
+  template:
+    metadata:
+      labels:
+        app: hr2-app
+    spec:
+      containers:
+      - name: hr2-app
+        image: hr2-app:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8501
