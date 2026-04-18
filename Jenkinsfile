@@ -7,6 +7,9 @@ pipeline {
 
     stages {
 
+        // =========================
+        // 1. SONARQUBE ANALYSIS
+        // =========================
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-local') {
@@ -23,7 +26,9 @@ pipeline {
             }
         }
 
-        // 🔥 ADDED: QUALITY GATE CHECK (IMPORTANT)
+        // =========================
+        // 2. QUALITY GATE CHECK
+        // =========================
         stage('Quality Gate Check') {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
@@ -32,12 +37,34 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        // =========================
+        // 3. JUNIT TESTING (ML TESTS)
+        // =========================
+        stage('JUnit Testing') {
             steps {
-                bat 'docker build -t hr2-app -f docker/Dockerfile .'
+                bat 'pip install -r requirements.txt'
+                bat 'pytest tests/ --junitxml=reports/test-results.xml'
+            }
+
+            post {
+                always {
+                    junit 'reports/test-results.xml'
+                }
             }
         }
 
+        // =========================
+        // 4. BUILD DOCKER IMAGE
+        // =========================
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t hr2-app:latest -f docker/Dockerfile .'
+            }
+        }
+
+        // =========================
+        // 5. RUN CONTAINER
+        // =========================
         stage('Run Container') {
             steps {
                 bat 'docker stop hr2-container || exit 0'
@@ -46,19 +73,33 @@ pipeline {
             }
         }
 
-        // 🔥 PHASE 7: GITOPS (ARGOCD TRIGGER STAGE)
+        // =========================
+        // 6. GITOPS (ARGOCD TRIGGER)
+        // =========================
         stage('GitOps - Deploy to Kubernetes Repo') {
             steps {
                 bat """
                 echo Updating Kubernetes manifests for ArgoCD...
 
-                cd k8s
+                cd kubernetes
 
                 git add .
                 git commit -m "Updated deployment from Jenkins build %BUILD_NUMBER%" || exit 0
                 git push origin main
                 """
             }
+        }
+    }
+
+    // =========================
+    // POST ACTIONS
+    // =========================
+    post {
+        success {
+            echo 'Pipeline completed successfully 🚀'
+        }
+        failure {
+            echo 'Pipeline failed ❌ check logs'
         }
     }
 }
