@@ -7,6 +7,9 @@ pipeline {
 
     stages {
 
+        // =========================
+        // SONARQUBE ANALYSIS
+        // =========================
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-local') {
@@ -16,14 +19,16 @@ pipeline {
                         -Dsonar.projectKey=hr2-project ^
                         -Dsonar.sources=. ^
                         -Dsonar.host.url=http://localhost:9000 ^
-                        -Dsonar.login=%SONAR_TOKEN%
+                        -Dsonar.token=%SONAR_TOKEN%
                         """
                     }
                 }
             }
         }
 
-        // 🔥 ADDED: QUALITY GATE CHECK (IMPORTANT)
+        // =========================
+        // QUALITY GATE
+        // =========================
         stage('Quality Gate Check') {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
@@ -32,12 +37,34 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        // =========================
+        // JUNIT TESTING (ML READY)
+        // =========================
+        stage('JUnit Testing') {
             steps {
-                bat 'docker build -t hr2-app -f docker/Dockerfile .'
+                bat 'pip install -r requirements.txt'
+                bat 'pytest tests/ --junitxml=reports/test-results.xml'
+            }
+
+            post {
+                always {
+                    junit 'reports/test-results.xml'
+                }
             }
         }
 
+        // =========================
+        // DOCKER BUILD
+        // =========================
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t hr2-app:latest -f docker/Dockerfile .'
+            }
+        }
+
+        // =========================
+        // RUN CONTAINER
+        // =========================
         stage('Run Container') {
             steps {
                 bat 'docker stop hr2-container || exit 0'
@@ -46,19 +73,30 @@ pipeline {
             }
         }
 
-        // 🔥 PHASE 7: GITOPS (ARGOCD TRIGGER STAGE)
+        // =========================
+        // GITOPS (ARGOCD TRIGGER)
+        // =========================
         stage('GitOps - Deploy to Kubernetes Repo') {
             steps {
                 bat """
                 echo Updating Kubernetes manifests for ArgoCD...
 
-                cd k8s
+                cd kubernetes
 
                 git add .
                 git commit -m "Updated deployment from Jenkins build %BUILD_NUMBER%" || exit 0
                 git push origin main
                 """
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline Success 🚀"
+        }
+        failure {
+            echo "Pipeline Failed ❌ Check logs"
         }
     }
 }
