@@ -13,7 +13,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'sonar-token1', variable: 'SONAR_TOKEN')]) {
                         bat """
                         %SONAR_SCANNER%\\bin\\sonar-scanner ^
-                        -Dsonar.projectKey=hr2-project ^
+                        -Dsonar.projectKey=hr2-project1 ^
                         -Dsonar.sources=. ^
                         -Dsonar.host.url=http://localhost:9000 ^
                         -Dsonar.login=%SONAR_TOKEN%
