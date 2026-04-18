@@ -8,7 +8,7 @@ pipeline {
     stages {
 
         // =========================
-        // 1. SONARQUBE ANALYSIS
+        // SONARQUBE ANALYSIS
         // =========================
         stage('SonarQube Analysis') {
             steps {
@@ -19,7 +19,7 @@ pipeline {
                         -Dsonar.projectKey=hr2-project ^
                         -Dsonar.sources=. ^
                         -Dsonar.host.url=http://localhost:9000 ^
-                        -Dsonar.login=%SONAR_TOKEN%
+                        -Dsonar.token=%SONAR_TOKEN%
                         """
                     }
                 }
@@ -27,7 +27,7 @@ pipeline {
         }
 
         // =========================
-        // 2. QUALITY GATE CHECK
+        // QUALITY GATE
         // =========================
         stage('Quality Gate Check') {
             steps {
@@ -38,7 +38,7 @@ pipeline {
         }
 
         // =========================
-        // 3. JUNIT TESTING (ML TESTS)
+        // JUNIT TESTING (ML READY)
         // =========================
         stage('JUnit Testing') {
             steps {
@@ -54,7 +54,7 @@ pipeline {
         }
 
         // =========================
-        // 4. BUILD DOCKER IMAGE
+        // DOCKER BUILD
         // =========================
         stage('Build Docker Image') {
             steps {
@@ -63,7 +63,7 @@ pipeline {
         }
 
         // =========================
-        // 5. RUN CONTAINER
+        // RUN CONTAINER
         // =========================
         stage('Run Container') {
             steps {
@@ -74,7 +74,7 @@ pipeline {
         }
 
         // =========================
-        // 6. GITOPS (ARGOCD TRIGGER)
+        // GITOPS (ARGOCD TRIGGER)
         // =========================
         stage('GitOps - Deploy to Kubernetes Repo') {
             steps {
@@ -91,15 +91,12 @@ pipeline {
         }
     }
 
-    // =========================
-    // POST ACTIONS
-    // =========================
     post {
         success {
-            echo 'Pipeline completed successfully 🚀'
+            echo "Pipeline Success 🚀"
         }
         failure {
-            echo 'Pipeline failed ❌ check logs'
+            echo "Pipeline Failed ❌ Check logs"
         }
     }
 }
