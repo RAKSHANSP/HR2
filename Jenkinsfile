@@ -36,5 +36,20 @@ pipeline {
                 bat 'docker run -d -p 8501:8501 --name hr2-container hr2-app'
             }
         }
+
+        // 🔥 PHASE 7: GITOPS (ARGOCD TRIGGER STAGE)
+        stage('GitOps - Deploy to Kubernetes Repo') {
+            steps {
+                bat """
+                echo Updating Kubernetes manifests for ArgoCD...
+
+                cd k8s
+
+                git add .
+                git commit -m "Updated deployment from Jenkins build %BUILD_NUMBER%" || exit 0
+                git push origin main
+                """
+            }
+        }
     }
 }
